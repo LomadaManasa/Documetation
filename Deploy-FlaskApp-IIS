@@ -1,0 +1,47 @@
+Prerequistes:
+Download the executable file and install Python in “C:\Python” folder and add “C:\Python\” and “C:\Python\Scripts” to the system environment variables. We can verify the installation by using the command prompt (CMD).
+Install all the dependencies that are required to the run Application
+
+Process:
+
+To run flask on IIS we need to install flask and Wfastcgi
+
+we have to install the IIS feature in the Windows server and enable the CGI role
+  Open Server Manager and select Manage > Add Roles and Features.
+  Click “Next” and select “Role-based or feature-based installation” and select “Next”
+  Select the server (default: server available in server pool) and select “Next”
+  Select “Web Server (IIS)”, select “Add Features” and select “Next”
+  Accept the default configurations and continue till we see the “Role Services ” screen. Select “CGI” under “Application Development” and select “Next”
+  Accept the default configurations and select “Install”.
+Enable the FastCGI module
+  Go to this path “C:\Python\Scripts\” and execute the “wfastcgi-enable.exe” file. This will enable the FastCGI module and attach it with the IIS server.
+Now, copy the “wfastcgi.py” file from “C:\Python\Lib\site-packages\” directory and paste it to “C:\inetpub\wwwroot\FlaskApp\” directory.
+Now, we have to provide a few permissions to IIS so that it can access the FlaskApp directory. Open a CMD and change the directory to FlaskApp and execute the following commands:
+  icacls . /grant "NT AUTHORITY\IUSR:(OI)(CI)(RX)"
+  icacls . /grant "Builtin\IIS_IUSRS:(OI)(CI)(RX)"
+Create a Website in IIS Manager
+Right click on Web Site > Manage Website > Advanced Settings… > Update the Physical Path value by “C:\inetpub\wwwroot\FlaskApp” and select “OK”
+Select “Handler Mappings” in Default Web Site Home screen > Add Module Mapping… > Insert the values as below:
+  Request Path: *
+  Module: FastCgiModule (Select from the dropdown menu)
+  Executable(optional): 
+  C:\Python\python.exe|C:\inetpub\wwwroot\FlaskApp\wfastcgi.py
+  Name: FlaskHandler
+Click on “Request Restrictions” and uncheck “Invoke handler only if request is mapped to:” checkbox and select OK followed by another OK. Select “Yes” if prompted with warning.
+Now, verify the module mapping in FastCGI Settings in the root server. This should create an entry in FastCGI Settings.
+
+ Update the FastCGI Application
+
+Double click the application entry in FastCGI settings to edit the application and select “Environment Variables”.
+  Click on “…” and open the “EnvironmentVariables Collection Editor”.
+
+  Add the below entries:
+  
+  Name: PYTHONPATH
+  Value: C:\inetpub\wwwroot\FlaskApp
+  The PYTHONPATH must point to the directory containing the Flask Application.
+
+  Name: WSGI_HANDLER
+  Value: app.app
+  The WSGI_HANDLER must point to the application name followed by “.app”. In our case, the application name is “app.py” so WSGI_HANDLER is pointing to “app.app”.
+Access the Website
